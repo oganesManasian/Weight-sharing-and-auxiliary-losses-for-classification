@@ -1,39 +1,45 @@
 import matplotlib.pyplot as plt
 import torch
 from torch import optim
+import numpy as np
+from tqdm import tqdm_notebook as tqdm
 
 
-def get_accuracy(model, data_loader, calculate_accuracy_digit=False):
+def get_accuracy(model, data_loader, device, calculate_accuracy_digit=False):
     """Calculates accuracy of predicting class or predicting class and digit of model on data from data_loader"""
     if calculate_accuracy_digit:
-        return get_accuracy_class_and_digit(model, data_loader)
+        return get_accuracy_class_and_digit(model, data_loader, device)
     else:
-        return get_accuracy_class(model, data_loader)
+        return get_accuracy_class(model, data_loader, device)
 
 
-def get_accuracy_class(model, data_loader):
+def get_accuracy_class(model, data_loader, device):
     """Calculates accuracy of predicting class of model on data from data_loader"""
     correct_class = 0
     total = 0
 
+    model.to(device)
     for (image, class_target, digit_target) in data_loader:
+        (image, class_target, digit_target) = (image.to(device), class_target.to(device), digit_target.to(device))
         predicted_class = model.predict(image)
-        correct_class += (predicted_class == class_target).sum().item()
+        correct_class += (predicted_class == class_target.unsqueeze(1).float()).sum().item()
         total += len(class_target)
 
     accuracy = correct_class / total
     return accuracy
 
 
-def get_accuracy_class_and_digit(model, data_loader):
+def get_accuracy_class_and_digit(model, data_loader, device):
     """Calculates accuracy of predicting class and digit of model on data from data_loader"""
     correct_class = 0
     correct_digit = 0
     total = 0
 
+    model.to(device)
     for (image, class_target, digit_target) in data_loader:
+        (image, class_target, digit_target) = (image.to(device), class_target.to(device), digit_target.to(device))
         predicted_class, (predicted_digit1, predicted_digit2) = model.predict(image)
-        correct_class += (predicted_class == class_target).sum().item()
+        correct_class += (predicted_class == class_target.unsqueeze(1).float()).sum().item()
         correct_digit += (predicted_digit1 == digit_target[:, 0]).sum().item()
         correct_digit += (predicted_digit2 == digit_target[:, 1]).sum().item()
         total += len(class_target)
@@ -44,7 +50,7 @@ def get_accuracy_class_and_digit(model, data_loader):
 
 
 def grid_search(learning_rates, regularizations,
-                train_func, train_data_loader, test_data_loader,
+                train_func, train_data_loader, test_data_loader, device,
                 model_class, model_params, criterion,
                 epochs=20, print_info=False):
     """Grid search for tuning hyperparameters (regularization term and learning rate)"""
@@ -58,6 +64,7 @@ def grid_search(learning_rates, regularizations,
                                           model=model,
                                           optimizer=optimizer,
                                           criterion=criterion,
+                                          device=device,
                                           epochs=epochs)
 
             _, accuracy_test_class, _, _ = accuracies
@@ -123,3 +130,46 @@ def test_samples(model, test_input, test_class, test_digit, nb_tests=5):
         fig.suptitle(f"Class: {target_class.item()}, predicted: {predicted_class.item()}")
 
         plt.show()
+
+
+def test_model(train_func, train_data_loader, test_data_loader, device,
+               model_class, model_params, criterion, lr, reg,
+               nb_tests=10, epochs=40):
+    accuracy_values = []
+    loss_values = []
+
+    for _ in tqdm(range(nb_tests)):
+        model = model_class(**model_params)
+        optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=reg)
+
+        _, accuracies, losses = train_func(train_data_loader, test_data_loader,
+                                           model=model,
+                                           optimizer=optimizer,
+                                           criterion=criterion,
+                                           device=device,
+                                           epochs=epochs)
+        accuracy_values.append(accuracies[1])  # Collect test accuracies
+        loss_values.append(losses)
+    return accuracy_values, loss_values
+
+
+def plot_test_results(accuracy_values, loss_values, plot_title="Model's assessment"):
+    epochs = len(accuracy_values[0])
+    titles = ['Test accuracy', 'Loss']
+    values_to_plot = [accuracy_values, loss_values]
+    plt.figure(figsize=(20, 5))
+
+    for i, (title, values) in enumerate(zip(titles, values_to_plot)):
+        plt.subplot(1, 2, i + 1)
+        values_mean = np.mean(values, axis=0)
+        values_std = np.std(values, axis=0)
+
+        plt.plot(range(epochs), values_mean)
+        plt.fill_between(range(epochs), values_mean - values_std, values_mean + values_std, alpha=0.3)
+        plt.xlabel('Epoch')
+        plt.ylabel(title)
+        plt.grid(axis='y')
+
+    plt.suptitle(plot_title)
+
+    plt.show()
