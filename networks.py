@@ -4,31 +4,51 @@ import torch.nn.functional as F
 
 
 class NetSimple(nn.Module):
-    """CNN network"""
-    def __init__(self, input_channels, output_channels):
-        super().__init__()
-        self.conv1 = nn.Conv2d(input_channels, 32, 3)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(32, 64, 3)
+    """
+    CNN network
+    Predicts image class
+    """
 
-        # self.dropout1 = nn.Dropout(p=0.5)
-        self.fc1 = nn.Linear(64 * 2 * 2, 100)
-        # self.dropout2 = nn.Dropout(p=0.25)
+    def __init__(self, input_channels, output_channels, activation="relu"):
+        """
+        :param input_channels: Number of input channels
+        :param output_channels: Number of output channels for class prediction
+        :param activation: Activation function
+        """
+        super().__init__()
+        self.conv1 = nn.Conv2d(input_channels, 16, 3)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.dropout1 = nn.Dropout(p=0.25)
+        self.conv2 = nn.Conv2d(16, 32, 3)
+
+        self.dropout2 = nn.Dropout(p=0.5)
+        self.fc1 = nn.Linear(32 * 2 * 2, 100)
+        self.dropout3 = nn.Dropout(p=0.5)
         self.fc2 = nn.Linear(100, output_channels)
         self.sigmoid = torch.nn.Sigmoid()
+
+        if activation == "relu":
+            self.activation = F.relu
+        elif activation == "tanh":
+            self.activation = F.tanh
+        elif activation == "leakyrelu":
+            self.activation = F.leaky_relu
+        else:
+            raise NotImplementedError
 
         self.predicts_digit = False
 
     def forward(self, x):
         # Feature extractor
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
+        x = self.pool(self.activation(self.conv1(x)))
+        x = self.dropout1(x)
+        x = self.pool(self.activation(self.conv2(x)))
 
         # Classificator
         x = x.view(x.size(0), -1)
-        # x = self.dropout1(x)
-        x = F.relu(self.fc1(x))
-        # x = self.dropout2(x)
+        x = self.dropout2(x)
+        x = self.activation(self.fc1(x))
+        x = self.dropout3(x)
         x = self.fc2(x)
         return x
 
@@ -38,21 +58,58 @@ class NetSimple(nn.Module):
 
 
 class NetSiamese(nn.Module):
-    """Siamese CNN network with additional output for auxiliary losses on digit prediction"""
-    def __init__(self, input_channels, output_class_channels, output_digit_channels, auxiliary_loss=False):
+    """
+    Siamese CNN network
+    Shares convolution and first two fully connected layers
+    """
+
+    def __init__(self, input_channels, output_class_channels, output_digit_channels,
+                 activation="relu", version=1, auxiliary_loss=False):
+        """
+        :param input_channels: Number of input channels
+        :param output_class_channels: Number of output channels for class prediction
+        :param output_digit_channels: Number of output channels for digit prediction
+        :param activation: Activation function
+        :param version: Determine how to combine results of two parallel flows
+        :param auxiliary_loss: If True model additionally outputs digit predictions for auxiliary loss construction
+        """
         super().__init__()
-        self.conv1 = nn.Conv2d(input_channels // 2, 32, 3)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(32, 64, 3)
-
-        # self.dropout1 = nn.Dropout(p=0.5)
-        self.fc1 = nn.Linear(64 * 2 * 2, 100)
-        self.fc2 = nn.Linear(100, output_digit_channels)
-        self.fc3 = nn.Linear(2 * output_digit_channels, 50)
-        self.fc4 = nn.Linear(50, output_class_channels)
-        self.sigmoid = torch.nn.Sigmoid()
-
+        self.version = version
         self.predicts_digit = auxiliary_loss
+
+        self.conv1 = nn.Conv2d(input_channels // 2, 16, 3)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.dropout1 = nn.Dropout(p=0.25)
+        self.conv2 = nn.Conv2d(16, 32, 3)
+
+        self.dropout2 = nn.Dropout(p=0.5)
+        self.fc1 = nn.Linear(32 * 2 * 2, 100)
+        self.dropout3 = nn.Dropout(p=0.5)
+        encoding_size = 100
+        self.fc2 = nn.Linear(encoding_size, output_digit_channels)
+
+        if self.version == 1:
+            self.fc3 = nn.Linear(2 * output_digit_channels, 50)
+            self.fc4 = nn.Linear(50, output_class_channels)
+        elif self.version == 2:
+            self.fc3 = nn.Linear(2 * encoding_size, 100)
+            self.fc4 = nn.Linear(100, output_class_channels)
+        elif self.version == 3:
+            self.fc3 = nn.Linear(encoding_size, 50)
+            self.fc4 = nn.Linear(50, output_class_channels)
+        else:
+            raise NotImplementedError
+
+        if activation == "relu":
+            self.activation = F.relu
+        elif activation == "tanh":
+            self.activation = F.tanh
+        elif activation == "leakyrelu":
+            self.activation = F.leaky_relu
+        else:
+            raise NotImplementedError
+
+        self.sigmoid = torch.nn.Sigmoid()
 
     def forward(self, x):
         # Separate channels
@@ -60,23 +117,36 @@ class NetSiamese(nn.Module):
         x2 = x[:, 1, :, :].view(-1, 1, 14, 14)
 
         # Feature extractor
-        x1 = self.pool(F.relu(self.conv1(x1)))
-        x1 = self.pool(F.relu(self.conv2(x1)))
+        x1 = self.pool(self.activation(self.conv1(x1)))
+        x1 = self.dropout1(x1)
+        x1 = self.pool(self.activation(self.conv2(x1)))
 
-        x2 = self.pool(F.relu(self.conv1(x2)))
-        x2 = self.pool(F.relu(self.conv2(x2)))
+        x2 = self.pool(self.activation(self.conv1(x2)))
+        x2 = self.dropout1(x2)
+        x2 = self.pool(self.activation(self.conv2(x2)))
 
         # Classificator
         x1 = x1.view(x1.size(0), -1)
-        x1 = F.relu(self.fc1(x1))
+        x1 = self.dropout2(x1)
+        x1_encoding = self.activation(self.fc1(x1))
+        x1 = self.dropout3(x1_encoding)
         output_digit1 = self.fc2(x1)
 
         x2 = x2.view(x2.size(0), -1)
-        x2 = F.relu(self.fc1(x2))
+        x2 = self.dropout2(x2)
+        x2_encoding = self.activation(self.fc1(x2))
+        x2 = self.dropout3(x2_encoding)
         output_digit2 = self.fc2(x2)
 
-        x = torch.cat((output_digit1, output_digit2), 1)
-        x = F.relu(self.fc3(x))
+        if self.version == 1:
+            x = torch.cat((output_digit1, output_digit2), 1)
+        elif self.version == 2:
+            x = torch.cat((x1_encoding, x2_encoding), 1)
+        else:  # version 3
+            x = x1_encoding - x2_encoding
+            assert (x.shape == x1_encoding.shape)
+
+        x = self.activation(self.fc3(x))
         output_class = self.fc4(x)
 
         if self.predicts_digit:
@@ -94,55 +164,3 @@ class NetSiamese(nn.Module):
         else:
             predicted_class = self.sigmoid(self.forward(x)).round()
             return predicted_class
-
-
-# class NetAuxiliaryLoss(nn.Module):
-#     """Siamese CNN network with additional output for auxiliary losses on digit prediction"""
-#     def __init__(self, input_channels, output_class_channels, output_digit_channels):
-#         super().__init__()
-#         self.conv1 = nn.Conv2d(input_channels // 2, 32, 3)
-#         self.pool = nn.MaxPool2d(2, 2)
-#         self.conv2 = nn.Conv2d(32, 64, 3)
-#
-#         # self.dropout1 = nn.Dropout(p=0.5)
-#         self.fc1 = nn.Linear(64 * 2 * 2, 100)
-#         self.fc2 = nn.Linear(100, output_digit_channels)
-#         self.fc3 = nn.Linear(2 * output_digit_channels, 50)
-#         self.fc4 = nn.Linear(50, output_class_channels)
-#         self.sigmoid = torch.nn.Sigmoid()
-#
-#         self.predicts_digit = True
-#
-#     def forward(self, x):
-#         # Separate channels
-#         x1 = x[:, 0, :, :].view(-1, 1, 14, 14)
-#         x2 = x[:, 1, :, :].view(-1, 1, 14, 14)
-#
-#         # Feature extractor
-#         x1 = self.pool(F.relu(self.conv1(x1)))
-#         x1 = self.pool(F.relu(self.conv2(x1)))
-#
-#         x2 = self.pool(F.relu(self.conv1(x2)))
-#         x2 = self.pool(F.relu(self.conv2(x2)))
-#
-#         # Classificator
-#         x1 = x1.view(x1.size(0), -1)
-#         x1 = F.relu(self.fc1(x1))
-#         output_digit1 = self.fc2(x1)
-#
-#         x2 = x2.view(x2.size(0), -1)
-#         x2 = F.relu(self.fc1(x2))
-#         output_digit2 = self.fc2(x2)
-#
-#         x = torch.cat((output_digit1, output_digit2), 1)
-#         x = F.relu(self.fc3(x))
-#         output_class = self.fc4(x)
-#
-#         return output_class, [output_digit1, output_digit2]
-#
-#     def predict(self, x):
-#         output_class, output_digits = self.forward(x)
-#         predicted_class = self.sigmoid(output_class).round()
-#         _, predicted_digit1 = torch.max(output_digits[0], 1)
-#         _, predicted_digit2 = torch.max(output_digits[1], 1)
-#         return predicted_class, [predicted_digit1, predicted_digit2]

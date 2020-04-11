@@ -6,7 +6,15 @@ from tqdm import tqdm_notebook as tqdm
 
 
 def get_accuracy(model, data_loader, device, calculate_accuracy_digit=False):
-    """Calculates accuracy of predicting class or predicting class and digit of model on data from data_loader"""
+    """
+    Calculates accuracy of predicting class or predicting class and digit of model
+    :param model: model to evaluate
+    :param data_loader: data for evaluation
+    :param device: device to use
+    :param calculate_accuracy_digit: If True method will also calculate accuracy of digit prediction
+    (Set to true only if model performs digit prediction)
+    :return: accuracy of class prediction and accuracy of digit prediction if calculate_accuracy_digit is set to True
+    """
     if calculate_accuracy_digit:
         return get_accuracy_class_and_digit(model, data_loader, device)
     else:
@@ -14,7 +22,13 @@ def get_accuracy(model, data_loader, device, calculate_accuracy_digit=False):
 
 
 def get_accuracy_class(model, data_loader, device):
-    """Calculates accuracy of predicting class of model on data from data_loader"""
+    """
+    Calculates accuracy of predicting class of model on data from 'data_loader'
+    :param model: model to evaluate
+    :param data_loader: data for evaluation
+    :param device: device to use
+    :return: accuracy value
+    """
     correct_class = 0
     total = 0
 
@@ -30,7 +44,13 @@ def get_accuracy_class(model, data_loader, device):
 
 
 def get_accuracy_class_and_digit(model, data_loader, device):
-    """Calculates accuracy of predicting class and digit of model on data from data_loader"""
+    """
+    Calculates accuracy of predicting class and digit of model
+    :param model: model to evaluate
+    :param data_loader: data for evaluation
+    :param device: device to use
+    :return: accuracy of class prediction and accuracy of digit prediction
+    """
     correct_class = 0
     correct_digit = 0
     total = 0
@@ -53,7 +73,21 @@ def grid_search(learning_rates, regularizations,
                 train_func, train_data_loader, test_data_loader, device,
                 model_class, model_params, criterion,
                 epochs=20, print_info=False):
-    """Grid search for tuning hyperparameters (regularization term and learning rate)"""
+    """
+     Grid search for tuning regularization term and learning rate hyperparameters
+    :param learning_rates: list of learning rate values to evaluate
+    :param regularizations: list of regularization values to evaluate
+    :param train_func: func to use to train model
+    :param train_data_loader: data for train as data_loader
+    :param test_data_loader: data for test as data_loader
+    :param device: device to use
+    :param model_class: python class of model to use
+    :param model_params: parameters of model's class for init
+    :param criterion: loss criterion to use
+    :param epochs: number of epochs
+    :param print_info: if True method will print results of model evaluation for every pair of parameters
+    :return:
+    """
     config_accuracy = []  # Test accuracies for different configurations
     for lr in learning_rates:
         for reg in regularizations:
@@ -75,14 +109,21 @@ def grid_search(learning_rates, regularizations,
 
     config_accuracy.sort(key=lambda x: x[2], reverse=True)
     best_config = config_accuracy[0]
-    lr, reg = best_config[:2]
+    lr, reg, accuracy = best_config
     if print_info:
-        print(f"Best configuration: learning rate = {lr}, regularization = {reg}")
+        print(f"Best configuration (accuracy: {accuracy}): learning rate = {lr}, regularization = {reg}")
     return lr, reg
 
 
 def plot_accuracy_and_loss(accuracy_train, accuracy_test, losses, title):
-    """Plot accuracy and loss curves"""
+    """
+    Plot accuracy and loss curves on one plot with two y axes
+    :param accuracy_train: train accuracy values
+    :param accuracy_test: test accuracy values
+    :param losses: loss values
+    :param title: title for plot
+    :return:
+    """
     fig, ax1 = plt.subplots()
 
     color_tr = 'tab:green'
@@ -107,7 +148,15 @@ def plot_accuracy_and_loss(accuracy_train, accuracy_test, losses, title):
 
 
 def test_samples(model, test_input, test_class, test_digit, nb_tests=5):
-    """Test model on random samples from test dataset"""
+    """
+    PLots models predictions on random samples from provided data
+    :param model: model to use
+    :param test_input: images to use
+    :param test_class: target classes to use
+    :param test_digit: target digit's to use
+    :param nb_tests: number of images to test model on
+    :return: None
+    """
     indices_to_test = (torch.rand(nb_tests) * len(test_input)).int()
 
     for ind in indices_to_test:
@@ -135,6 +184,21 @@ def test_samples(model, test_input, test_class, test_digit, nb_tests=5):
 def test_model(train_func, train_data_loader, test_data_loader, device,
                model_class, model_params, criterion, lr, reg,
                nb_tests=10, epochs=40):
+    """
+    Runs model's training 'nb_tests' time
+    :param train_func: func to use to train model
+    :param train_data_loader: data for train as data_loader
+    :param test_data_loader: data for test as data_loader
+    :param device: device to use
+    :param model_class: python class of model to use
+    :param model_params: parameters of model's class for init
+    :param criterion: loss criterion
+    :param lr: learning rate
+    :param reg: regularization term
+    :param nb_tests: number of times to retrain model
+    :param epochs:
+    :return: test accuracy and loss values of all tests
+    """
     accuracy_values = []
     loss_values = []
 
@@ -153,13 +217,20 @@ def test_model(train_func, train_data_loader, test_data_loader, device,
     return accuracy_values, loss_values
 
 
-def plot_test_results(accuracy_values, loss_values, plot_title="Model's assessment"):
+def plot_test_results(accuracy_values, loss_values, title="Model's assessment"):
+    """
+    Plots accuracy and loss values for case of several tests
+    :param accuracy_values: list of accuracy values from different tests
+    :param loss_values: list of loss values from different tests
+    :param title: title for plot
+    :return:
+    """
     epochs = len(accuracy_values[0])
-    titles = ['Test accuracy', 'Loss']
+    ylabels = ['Test accuracy', 'Loss']
     values_to_plot = [accuracy_values, loss_values]
     plt.figure(figsize=(20, 5))
 
-    for i, (title, values) in enumerate(zip(titles, values_to_plot)):
+    for i, (ylabel, values) in enumerate(zip(ylabels, values_to_plot)):
         plt.subplot(1, 2, i + 1)
         values_mean = np.mean(values, axis=0)
         values_std = np.std(values, axis=0)
@@ -167,9 +238,9 @@ def plot_test_results(accuracy_values, loss_values, plot_title="Model's assessme
         plt.plot(range(epochs), values_mean)
         plt.fill_between(range(epochs), values_mean - values_std, values_mean + values_std, alpha=0.3)
         plt.xlabel('Epoch')
-        plt.ylabel(title)
+        plt.ylabel(ylabel)
         plt.grid(axis='y')
 
-    plt.suptitle(plot_title)
+    plt.suptitle(title)
 
     plt.show()
