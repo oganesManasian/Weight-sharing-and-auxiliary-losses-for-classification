@@ -16,15 +16,15 @@ class NetSimple(nn.Module):
         :param activation: Activation function
         """
         super().__init__()
-        self.conv1 = nn.Conv2d(input_channels, 16, 3)
+        self.conv1 = nn.Conv2d(input_channels, 8, 3)
         self.pool = nn.MaxPool2d(2, 2)
         self.dropout1 = nn.Dropout(p=0.25)
-        self.conv2 = nn.Conv2d(16, 32, 3)
+        self.conv2 = nn.Conv2d(8, 16, 3)
 
         self.dropout2 = nn.Dropout(p=0.5)
-        self.fc1 = nn.Linear(32 * 2 * 2, 100)
+        self.fc1 = nn.Linear(16 * 2 * 2, 50)
         self.dropout3 = nn.Dropout(p=0.5)
-        self.fc2 = nn.Linear(100, output_channels)
+        self.fc2 = nn.Linear(50, output_channels)
         self.sigmoid = torch.nn.Sigmoid()
 
         if activation == "relu":
@@ -63,6 +63,11 @@ class NetSiamese(nn.Module):
     Shares convolution and first two fully connected layers
     """
 
+    possible_version = [1,  # Predicting class from digit's predictions (with fully connected layers)
+                        2,  # Predicting class from concatenated encodings of digits
+                        3,  # Predicting class from subtracted encodings of digits
+                        4]  # Predicting class simply by comparing digit's predictions (no use of any layers)
+
     def __init__(self, input_channels, output_class_channels, output_digit_channels,
                  activation="relu", version=1, auxiliary_loss=False):
         """
@@ -77,26 +82,28 @@ class NetSiamese(nn.Module):
         self.version = version
         self.predicts_digit = auxiliary_loss
 
-        self.conv1 = nn.Conv2d(input_channels // 2, 16, 3)
+        self.conv1 = nn.Conv2d(input_channels // 2, 8, 3)
         self.pool = nn.MaxPool2d(2, 2)
         self.dropout1 = nn.Dropout(p=0.25)
-        self.conv2 = nn.Conv2d(16, 32, 3)
+        self.conv2 = nn.Conv2d(8, 16, 3)
 
         self.dropout2 = nn.Dropout(p=0.5)
-        self.fc1 = nn.Linear(32 * 2 * 2, 100)
+        self.fc1 = nn.Linear(16 * 2 * 2, 50)
         self.dropout3 = nn.Dropout(p=0.5)
-        encoding_size = 100
+        encoding_size = 50
         self.fc2 = nn.Linear(encoding_size, output_digit_channels)
 
         if self.version == 1:
-            self.fc3 = nn.Linear(2 * output_digit_channels, 50)
-            self.fc4 = nn.Linear(50, output_class_channels)
+            self.fc3 = nn.Linear(2 * output_digit_channels, 25)
+            self.fc4 = nn.Linear(25, output_class_channels)
         elif self.version == 2:
-            self.fc3 = nn.Linear(2 * encoding_size, 100)
-            self.fc4 = nn.Linear(100, output_class_channels)
+            self.fc3 = nn.Linear(2 * encoding_size, 25)
+            self.fc4 = nn.Linear(25, output_class_channels)
         elif self.version == 3:
-            self.fc3 = nn.Linear(encoding_size, 50)
-            self.fc4 = nn.Linear(50, output_class_channels)
+            self.fc3 = nn.Linear(encoding_size, 25)
+            self.fc4 = nn.Linear(25, output_class_channels)
+        elif self.version == 4:
+            pass  # We don't have addtional
         else:
             raise NotImplementedError
 
@@ -138,16 +145,21 @@ class NetSiamese(nn.Module):
         x2 = self.dropout3(x2_encoding)
         output_digit2 = self.fc2(x2)
 
-        if self.version == 1:
-            x = torch.cat((output_digit1, output_digit2), 1)
-        elif self.version == 2:
-            x = torch.cat((x1_encoding, x2_encoding), 1)
-        else:  # version 3
-            x = x1_encoding - x2_encoding
-            assert (x.shape == x1_encoding.shape)
+        if self.version == 4:
+            _, predicted_digit1 = torch.max(output_digit1, 1)
+            _, predicted_digit2 = torch.max(output_digit2, 1)
+            output_class = (predicted_digit1 <= predicted_digit2).float().unsqueeze(1)
+        else:
+            if self.version == 1:
+                x = torch.cat((output_digit1, output_digit2), 1)
+            elif self.version == 2:
+                x = torch.cat((x1_encoding, x2_encoding), 1)
+            else:  # version 3
+                x = x1_encoding - x2_encoding
+                assert (x.shape == x1_encoding.shape)
 
-        x = self.activation(self.fc3(x))
-        output_class = self.fc4(x)
+            x = self.activation(self.fc3(x))
+            output_class = self.fc4(x)
 
         if self.predicts_digit:
             return output_class, [output_digit1, output_digit2]
