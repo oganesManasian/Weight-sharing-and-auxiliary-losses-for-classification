@@ -65,7 +65,7 @@ def get_accuracy_class_and_digit(model, data_loader, device):
         total += len(class_target)
 
     accuracy_class = correct_class / total
-    accuracy_digit = correct_digit / total / 2
+    accuracy_digit = correct_digit / total / 2  # Divide by 2 since we summed up results of both digits predictions
     return accuracy_class, accuracy_digit
 
 
@@ -104,8 +104,8 @@ def grid_search(learning_rates, regularizations,
             _, accuracy_test_class, _, _ = accuracies
             config_accuracy.append([lr, reg, max(accuracy_test_class)])
             if print_info:
-                print(
-                    f"Learning rate: {lr:0.4f}, Regularization: {reg:0.2f}, Test Accuracy: {max(accuracy_test_class):0.3f}")
+                print(f"Learning rate: {lr:0.4f}, Regularization: {reg:0.2f}, "
+                      f"Test Accuracy: {max(accuracy_test_class):0.3f}")
 
     config_accuracy.sort(key=lambda x: x[2], reverse=True)
     best_config = config_accuracy[0]
@@ -196,7 +196,7 @@ def test_model(train_func, train_data_loader, test_data_loader, device,
     :param lr: learning rate
     :param reg: regularization term
     :param nb_tests: number of times to retrain model
-    :param epochs:
+    :param epochs: number of epochs to train model
     :return: test accuracy and loss values of all tests
     """
     accuracy_values = []
