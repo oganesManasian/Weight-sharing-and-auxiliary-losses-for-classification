@@ -77,7 +77,7 @@ def grid_search(learning_rates, regularizations,
      Grid search for tuning regularization term and learning rate hyperparameters
     :param learning_rates: list of learning rate values to evaluate
     :param regularizations: list of regularization values to evaluate
-    :param train_func: func to use to train model
+    :param train_func: function to use to train model
     :param train_data_loader: data for train as data_loader
     :param test_data_loader: data for test as data_loader
     :param device: device to use
@@ -181,14 +181,13 @@ def test_samples(model, test_input, test_class, test_digit, nb_tests=5):
         plt.show()
 
 
-def test_model(train_func, train_data_loader, test_data_loader, device,
+def test_model(train_func, data_generator, device,
                model_class, model_params, criterion, lr, reg,
                nb_tests=10, epochs=40):
     """
     Runs model's training 'nb_tests' time
-    :param train_func: func to use to train model
-    :param train_data_loader: data for train as data_loader
-    :param test_data_loader: data for test as data_loader
+    :param train_func: function to use to train model
+    :param data_generator: function for generating train and test data loaders
     :param device: device to use
     :param model_class: python class of model to use
     :param model_params: parameters of model's class for init
@@ -203,6 +202,7 @@ def test_model(train_func, train_data_loader, test_data_loader, device,
     loss_values = []
 
     for _ in tqdm(range(nb_tests)):
+        train_data_loader, test_data_loader = data_generator()
         model = model_class(**model_params)
         optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=reg)
 

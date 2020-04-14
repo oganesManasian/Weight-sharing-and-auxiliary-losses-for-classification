@@ -63,7 +63,7 @@ class NetSiamese(nn.Module):
     Shares convolution and first two fully connected layers
     """
 
-    possible_version = [1,  # Predicting class from digit's predictions (with fully connected layers)
+    possible_version = [1,  # Predicting class from digit's predictions
                         2,  # Predicting class from concatenated encodings of digits
                         3,  # Predicting class from subtracted encodings of digits
                         4]  # Predicting class simply by comparing digit's predictions (no use of any layers)
@@ -161,6 +161,7 @@ class NetSiamese(nn.Module):
             else:  # version 3
                 x = x1_encoding - x2_encoding
 
+            x = self.dropout4(x)
             output_class = self.fc3(x)
             # x = self.activation(self.fc3(x)) # Previous architecture with additional layer
             # x = self.dropout4(x)
