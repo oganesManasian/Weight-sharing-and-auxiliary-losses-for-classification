@@ -95,17 +95,17 @@ class NetSiamese(nn.Module):
 
         self.dropout4 = nn.Dropout(p=0.5)
         if self.version == 1:
-            self.fc3 = nn.Linear(2 * output_digit_channels, output_class_channels)
-            # self.fc3 = nn.Linear(2 * output_digit_channels, 25)  # Previous architecture with additional layer
-            # self.fc4 = nn.Linear(25, output_class_channels)
+            # self.fc3 = nn.Linear(2 * output_digit_channels, output_class_channels)
+            self.fc3 = nn.Linear(2 * output_digit_channels, 25)  # Previous architecture with additional layer
+            self.fc4 = nn.Linear(25, output_class_channels)
         elif self.version == 2:
-            self.fc3 = nn.Linear(2 * encoding_size, output_class_channels)
-            # self.fc3 = nn.Linear(2 * encoding_size, 25)  # Previous architecture with additional layer
-            # self.fc4 = nn.Linear(25, output_class_channels)
+            # self.fc3 = nn.Linear(2 * encoding_size, output_class_channels)
+            self.fc3 = nn.Linear(2 * encoding_size, 25)  # Previous architecture with additional layer
+            self.fc4 = nn.Linear(25, output_class_channels)
         elif self.version == 3:
-            self.fc3 = nn.Linear(encoding_size, output_class_channels)
-            # self.fc3 = nn.Linear(encoding_size, 25)  # Previous architecture with additional layer
-            # self.fc4 = nn.Linear(25, output_class_channels)
+            # self.fc3 = nn.Linear(encoding_size, output_class_channels)
+            self.fc3 = nn.Linear(encoding_size, 25)  # Previous architecture with additional layer
+            self.fc4 = nn.Linear(25, output_class_channels)
         elif self.version == 4:
             pass  # We don't have additional layers for this version
         else:
@@ -161,11 +161,11 @@ class NetSiamese(nn.Module):
             else:  # version 3
                 x = x1_encoding - x2_encoding
 
-            x = self.dropout4(x)
-            output_class = self.fc3(x)
-            # x = self.activation(self.fc3(x)) # Previous architecture with additional layer
             # x = self.dropout4(x)
-            # output_class = self.fc4(x)
+            # output_class = self.fc3(x)
+            x = self.activation(self.fc3(x)) # Previous architecture with additional layer
+            x = self.dropout4(x)
+            output_class = self.fc4(x)
 
         if self.predicts_digit:
             return output_class, [output_digit1, output_digit2]
