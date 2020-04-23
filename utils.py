@@ -35,8 +35,9 @@ def get_accuracy_class(model, data_loader, device):
     model.to(device)
     for (image, class_target, digit_target) in data_loader:
         (image, class_target, digit_target) = (image.to(device), class_target.to(device), digit_target.to(device))
-        predicted_class = model.predict(image)
-        correct_class += (predicted_class == class_target.unsqueeze(1).float()).sum().item()
+        class_predicted = model.predict(image)
+        # correct_class += (class_predicted == class_target.unsqueeze(1).float()).sum().item()  # Case of 1 output neuron
+        correct_class += (class_predicted == class_target).sum().item()
         total += len(class_target)
 
     accuracy = correct_class / total
@@ -58,10 +59,11 @@ def get_accuracy_class_and_digit(model, data_loader, device):
     model.to(device)
     for (image, class_target, digit_target) in data_loader:
         (image, class_target, digit_target) = (image.to(device), class_target.to(device), digit_target.to(device))
-        predicted_class, (predicted_digit1, predicted_digit2) = model.predict(image)
-        correct_class += (predicted_class == class_target.unsqueeze(1).float()).sum().item()
-        correct_digit += (predicted_digit1 == digit_target[:, 0]).sum().item()
-        correct_digit += (predicted_digit2 == digit_target[:, 1]).sum().item()
+        class_predicted, (digit1_predicted, digit2_predicted) = model.predict(image)
+        # correct_class += (class_predicted == class_target.unsqueeze(1).float()).sum().item()  # Case of 1 output neuron
+        correct_class += (class_predicted == class_target).sum().item()
+        correct_digit += (digit1_predicted == digit_target[:, 0]).sum().item()
+        correct_digit += (digit2_predicted == digit_target[:, 1]).sum().item()
         total += len(class_target)
 
     accuracy_class = correct_class / total
