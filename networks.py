@@ -16,13 +16,13 @@ class NetSimple(nn.Module):
         :param activation: Activation function
         """
         super().__init__()
-        self.conv1 = nn.Conv2d(input_channels, 8, 3)
+        self.conv1 = nn.Conv2d(input_channels, 16, 3)
         self.pool = nn.MaxPool2d(2, 2)
         self.dropout1 = nn.Dropout(p=0.25)
-        self.conv2 = nn.Conv2d(8, 16, 3)
+        self.conv2 = nn.Conv2d(16, 32, 3)
 
         self.dropout2 = nn.Dropout(p=0.5)
-        self.fc1 = nn.Linear(16 * 2 * 2, 50)
+        self.fc1 = nn.Linear(32 * 2 * 2, 50)
         self.dropout3 = nn.Dropout(p=0.5)
         self.fc2 = nn.Linear(50, output_channels)
         # self.sigmoid = torch.nn.Sigmoid()  # Case of 1 output neuron
@@ -83,14 +83,14 @@ class NetSiamese(nn.Module):
         self.version = version
         self.predicts_digit = auxiliary_loss
 
-        self.conv1 = nn.Conv2d(input_channels // 2, 8, 3)
+        self.conv1 = nn.Conv2d(input_channels // 2, 16, 3)
         self.pool = nn.MaxPool2d(2, 2)
         self.dropout1 = nn.Dropout(p=0.25)
-        self.conv2 = nn.Conv2d(8, 16, 3)
+        self.conv2 = nn.Conv2d(16, 32, 3)
 
         encoding_size = 25
         self.dropout2 = nn.Dropout(p=0.5)
-        self.fc1 = nn.Linear(16 * 2 * 2, encoding_size)
+        self.fc1 = nn.Linear(32 * 2 * 2, encoding_size)
         self.dropout3 = nn.Dropout(p=0.5)
         self.fc2 = nn.Linear(encoding_size, output_digit_channels)
 
