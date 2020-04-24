@@ -18,13 +18,13 @@ class NetSimple(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(input_channels, 16, 3)
         self.pool = nn.MaxPool2d(2, 2)
-        self.dropout1 = nn.Dropout(p=0.25)
         self.conv2 = nn.Conv2d(16, 32, 3)
 
+        self.dropout1 = nn.Dropout(p=0.25)
+        self.fc1 = nn.Linear(32 * 5 * 5, 50)
         self.dropout2 = nn.Dropout(p=0.5)
-        self.fc1 = nn.Linear(32 * 2 * 2, 50)
-        self.dropout3 = nn.Dropout(p=0.5)
         self.fc2 = nn.Linear(50, output_channels)
+        # self.dropout3 = nn.Dropout(p=0.5)
         # self.sigmoid = torch.nn.Sigmoid()  # Case of 1 output neuron
 
         if activation == "relu":
@@ -40,15 +40,14 @@ class NetSimple(nn.Module):
 
     def forward(self, x):
         # Feature extractor
-        x = self.pool(self.activation(self.conv1(x)))
-        x = self.dropout1(x)
+        x = self.activation(self.conv1(x))
         x = self.pool(self.activation(self.conv2(x)))
 
         # Classificator
         x = x.view(x.size(0), -1)
-        x = self.dropout2(x)
+        x = self.dropout1(x)
         x = self.activation(self.fc1(x))
-        x = self.dropout3(x)
+        x = self.dropout2(x)
         x = self.fc2(x)
         return x
 
@@ -85,13 +84,12 @@ class NetSiamese(nn.Module):
 
         self.conv1 = nn.Conv2d(input_channels // 2, 16, 3)
         self.pool = nn.MaxPool2d(2, 2)
-        self.dropout1 = nn.Dropout(p=0.25)
         self.conv2 = nn.Conv2d(16, 32, 3)
 
-        encoding_size = 25
+        encoding_size = 50
+        self.dropout1 = nn.Dropout(p=0.25)
+        self.fc1 = nn.Linear(32 * 5 * 5, encoding_size)
         self.dropout2 = nn.Dropout(p=0.5)
-        self.fc1 = nn.Linear(32 * 2 * 2, encoding_size)
-        self.dropout3 = nn.Dropout(p=0.5)
         self.fc2 = nn.Linear(encoding_size, output_digit_channels)
 
         # self.dropout4 = nn.Dropout(p=0.5)
@@ -129,25 +127,23 @@ class NetSiamese(nn.Module):
         x2 = x[:, 1, :, :].view(-1, 1, 14, 14)
 
         # Feature extractor
-        x1 = self.pool(self.activation(self.conv1(x1)))
-        x1 = self.dropout1(x1)
+        x1 = self.activation(self.conv1(x1))
         x1 = self.pool(self.activation(self.conv2(x1)))
 
-        x2 = self.pool(self.activation(self.conv1(x2)))
-        x2 = self.dropout1(x2)
+        x2 = self.activation(self.conv1(x2))
         x2 = self.pool(self.activation(self.conv2(x2)))
 
         # Classificator
         x1 = x1.view(x1.size(0), -1)
-        x1 = self.dropout2(x1)
+        x1 = self.dropout1(x1)
         x1_encoding = self.activation(self.fc1(x1))
-        x1 = self.dropout3(x1_encoding)
+        x1 = self.dropout2(x1_encoding)
         output_digit1 = (self.fc2(x1))
 
         x2 = x2.view(x2.size(0), -1)
-        x2 = self.dropout2(x2)
+        x2 = self.dropout1(x2)
         x2_encoding = self.activation(self.fc1(x2))
-        x2 = self.dropout3(x2_encoding)
+        x2 = self.dropout2(x2_encoding)
         output_digit2 = (self.fc2(x2))
 
         if self.version == 4:
