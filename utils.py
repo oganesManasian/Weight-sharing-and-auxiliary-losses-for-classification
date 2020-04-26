@@ -185,7 +185,7 @@ def test_samples(model, test_input, test_class, test_digit, nb_tests=5):
 
 def test_model(train_func, data_generator, device,
                model_class, model_params, criterion, lr, reg,
-               nb_tests=10, epochs=40):
+               generate_data_mode=None, nb_tests=10, epochs=40):
     """
     Runs model's training 'nb_tests' time
     :param train_func: function to use to train model
@@ -196,6 +196,7 @@ def test_model(train_func, data_generator, device,
     :param criterion: loss criterion
     :param lr: learning rate
     :param reg: regularization term
+    :param generate_data_mode: mode for data generating to tackle class imbalance (None, 'oversampling', 'undersampling')
     :param nb_tests: number of times to retrain model
     :param epochs: number of epochs to train model
     :return: test accuracy and loss values of all tests
@@ -204,7 +205,7 @@ def test_model(train_func, data_generator, device,
     loss_values = []
 
     for _ in tqdm(range(nb_tests)):
-        train_data_loader, test_data_loader = data_generator()
+        train_data_loader, test_data_loader = data_generator(mode=generate_data_mode)
         model = model_class(**model_params)
         optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=reg)
 
