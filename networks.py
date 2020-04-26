@@ -67,7 +67,7 @@ class NetSiamese(nn.Module):
                         2,  # Predicting class from concatenated encodings of digits
                         3,  # Predicting class from subtracted encodings of digits
                         4,  # Predicting class simply by comparing digit's predictions (no use of any layers)
-                        5,  # Predicting class from digit's prediction followed buy softmax layer
+                        5,  # Predicting class from digit's prediction followed by softmax layer
                         6]  # Predicting class from digit's predictions with 2 fully connected layers
 
     def __init__(self, input_channels, output_class_channels, output_digit_channels,
