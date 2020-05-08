@@ -117,13 +117,14 @@ def grid_search(learning_rates, regularizations,
     return lr, reg
 
 
-def plot_accuracy_and_loss(accuracy_train, accuracy_test, losses, title):
+def plot_accuracy_and_loss(accuracy_train, accuracy_test, losses, title, save=False):
     """
     Plot accuracy and loss curves on one plot with two y axes
     :param accuracy_train: train accuracy values
     :param accuracy_test: test accuracy values
     :param losses: loss values
     :param title: title for plot
+    :param save: set True to save plot
     :return:
     """
     fig, ax1 = plt.subplots()
@@ -144,8 +145,10 @@ def plot_accuracy_and_loss(accuracy_train, accuracy_test, losses, title):
     ax2.tick_params(axis='y', labelcolor=color_loss)
 
     fig.tight_layout()
-    plt.title(title)
     plt.grid()
+    if save:
+        plt.savefig(title + ".png")
+    plt.title(title)
     plt.show()
 
 
@@ -220,12 +223,13 @@ def test_model(train_func, data_generator, device,
     return accuracy_values, loss_values
 
 
-def plot_test_results(accuracy_values, loss_values, title="Model's assessment"):
+def plot_test_results(accuracy_values, loss_values, title="Model's assessment", save=False):
     """
     Plots accuracy and loss values for case of several tests
     :param accuracy_values: list of accuracy values from different tests
     :param loss_values: list of loss values from different tests
     :param title: title for plot
+    :param save: set True to save plot
     :return:
     """
     epochs = len(accuracy_values[0])
@@ -244,6 +248,8 @@ def plot_test_results(accuracy_values, loss_values, title="Model's assessment"):
         plt.ylabel(ylabel)
         plt.grid(axis='y')
 
+    if save:
+        plt.savefig(title + ".png")
     plt.suptitle(title)
-
     plt.show()
+

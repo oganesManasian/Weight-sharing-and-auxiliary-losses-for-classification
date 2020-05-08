@@ -60,7 +60,7 @@ class NetSimple(nn.Module):
 class NetSiamese(nn.Module):
     """
     Siamese CNN network
-    Shares convolution and first two fully connected layers
+    Shares convolution layers and first two fully connected layers
     """
 
     possible_version = [1,  # Predicting class from digit's predictions
@@ -162,8 +162,8 @@ class NetSiamese(nn.Module):
             _, predicted_digit2 = torch.max(output_digit2, 1)
             output_class = (predicted_digit1 <= predicted_digit2).float().unsqueeze(1).T
         elif self.version == 5:
-            output_digit1_softmax = self.softmax(self.fc2(x1))
-            output_digit2_softmax = self.softmax(self.fc2(x2))
+            output_digit1_softmax = self.softmax(output_digit1)
+            output_digit2_softmax = self.softmax(output_digit2)
             x = torch.cat((output_digit1_softmax, output_digit2_softmax), 1)
             output_class = self.fc3(x)
         elif self.version == 6:
