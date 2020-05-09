@@ -36,7 +36,6 @@ def get_accuracy_class(model, data_loader, device):
     for (image, class_target, digit_target) in data_loader:
         (image, class_target, digit_target) = (image.to(device), class_target.to(device), digit_target.to(device))
         class_predicted = model.predict(image)
-        # correct_class += (class_predicted == class_target.unsqueeze(1).float()).sum().item()  # Case of 1 output neuron
         correct_class += (class_predicted == class_target).sum().item()
         total += len(class_target)
 
@@ -60,7 +59,6 @@ def get_accuracy_class_and_digit(model, data_loader, device):
     for (image, class_target, digit_target) in data_loader:
         (image, class_target, digit_target) = (image.to(device), class_target.to(device), digit_target.to(device))
         class_predicted, (digit1_predicted, digit2_predicted) = model.predict(image)
-        # correct_class += (class_predicted == class_target.unsqueeze(1).float()).sum().item()  # Case of 1 output neuron
         correct_class += (class_predicted == class_target).sum().item()
         correct_digit += (digit1_predicted == digit_target[:, 0]).sum().item()
         correct_digit += (digit2_predicted == digit_target[:, 1]).sum().item()
@@ -88,7 +86,7 @@ def grid_search(learning_rates, regularizations,
     :param criterion: loss criterion to use
     :param epochs: number of epochs
     :param print_info: if True method will print results of model evaluation for every pair of parameters
-    :return:
+    :return: tuple (best learning rate, best regularization) on defined grid
     """
     config_accuracy = []  # Test accuracies for different configurations
     for lr in learning_rates:
@@ -125,7 +123,7 @@ def plot_accuracy_and_loss(accuracy_train, accuracy_test, losses, title, save=Fa
     :param losses: loss values
     :param title: title for plot
     :param save: set True to save plot
-    :return:
+    :return: None
     """
     fig, ax1 = plt.subplots()
 
@@ -230,7 +228,7 @@ def plot_test_results(accuracy_values, loss_values, title="Model's assessment", 
     :param loss_values: list of loss values from different tests
     :param title: title for plot
     :param save: set True to save plot
-    :return:
+    :return: None
     """
     epochs = len(accuracy_values[0])
     ylabels = ['Test accuracy', 'Loss']

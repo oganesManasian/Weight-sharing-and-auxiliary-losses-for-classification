@@ -5,7 +5,7 @@ CROSS_ENTROPY = nn.CrossEntropyLoss()
 
 def simple_model_criterion(output, target):
     """
-    Loss criterion for simple model: binary cross entropy for class predictons
+    Loss criterion for simple model: cross entropy for class predictons
     :param output: output of model
     :param target: target value
     :return: loss value
@@ -15,7 +15,7 @@ def simple_model_criterion(output, target):
 
 def siamese_model_criterion(output, target):
     """
-    Loss criterion for siamese model: binary cross entropy for class predictons
+    Loss criterion for siamese model: cross entropy for class predictons
     :param output: output of model
     :param target: target value
     :return: loss value
@@ -25,15 +25,15 @@ def siamese_model_criterion(output, target):
 
 def get_auxiliary_loss_model_criterion(lambda_=1):
     """
-    Creates loss with provided weight of class prediction loss
+    Creates loss with provided weight for class prediction loss
     :param lambda_: weight
-    :return: function to commpute loss
+    :return: function to compute loss
     """
 
     def auxiliary_loss_model_criterion(output_class, target_class, output_digits, target_digits):
         """
         Loss criterion for siamese model with auxiliary loss:
-        cross entropy for class predictons, cross entropy for both digit predictions
+        cross entropy for class predictions, cross entropy for both digit predictions
         :param output_class: output class of model
         :param target_class: target class value
         :param output_digits: output digits of model

@@ -24,8 +24,6 @@ class NetSimple(nn.Module):
         self.fc1 = nn.Linear(32 * 5 * 5, 50)
         self.dropout2 = nn.Dropout(p=0.5)
         self.fc2 = nn.Linear(50, output_channels)
-        # self.dropout3 = nn.Dropout(p=0.5)
-        # self.sigmoid = torch.nn.Sigmoid()  # Case of 1 output neuron
 
         if activation == "relu":
             self.activation = F.relu
@@ -52,7 +50,6 @@ class NetSimple(nn.Module):
         return x
 
     def predict(self, x):
-        # predicted_class = self.sigmoid(self.forward(x)).round()  # Case of 1 output neuron
         _, predicted_class = torch.max(self.forward(x), 1)
         return predicted_class
 
@@ -94,7 +91,6 @@ class NetSiamese(nn.Module):
         self.dropout2 = nn.Dropout(p=0.5)
         self.fc2 = nn.Linear(encoding_size, output_digit_channels)
 
-        # self.dropout3 = nn.Dropout(p=0.5)
         if self.version == 1:
             self.fc3 = nn.Linear(2 * output_digit_channels, output_class_channels)
         elif self.version == 2:
@@ -120,8 +116,6 @@ class NetSiamese(nn.Module):
             self.activation = F.leaky_relu
         else:
             raise NotImplementedError
-
-        # self.sigmoid = torch.nn.Sigmoid()  # Case of 1 output neuron
 
     def forward(self, x):
         # Separate channels
@@ -169,7 +163,6 @@ class NetSiamese(nn.Module):
         elif self.version == 6:
             x = torch.cat((output_digit1, output_digit2), 1)
             x = self.activation(self.fc3(x))
-            # x = self.dropout3(x)
             output_class = self.fc4(x)
 
         if self.predicts_digit:
@@ -183,12 +176,10 @@ class NetSiamese(nn.Module):
             if self.version == 4:
                 predicted_class = output_class
             else:
-                # predicted_class = self.sigmoid(output_class).round() # Case of 1 output neuron
                 _, predicted_class = torch.max(output_class, 1)
             _, predicted_digit1 = torch.max(output_digits[0], 1)
             _, predicted_digit2 = torch.max(output_digits[1], 1)
             return predicted_class, [predicted_digit1, predicted_digit2]
         else:
-            # predicted_class = self.sigmoid(self.forward(x)).round() # Case of 1 output neuron
             _, predicted_class = torch.max(self.forward(x), 1)
             return predicted_class

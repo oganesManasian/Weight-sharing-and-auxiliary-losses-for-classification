@@ -6,7 +6,14 @@ from dlc_practical_prologue import generate_pair_sets
 
 
 def balance_data_classes(train_input, train_class, train_digit, mode="oversampling"):
-    """Balances data by over or under sampling"""
+    """
+    Balances data by over or under sampling
+    :param train_input: input data
+    :param train_class: ground truth classes
+    :param train_digit: ground truth digits
+    :param mode: mode for data preprocessing (none, oversampling, undersampling)
+    :return: Balanced data as tuple (train_input, train_class, train_digit)
+    """
     count_train = Counter([el.item() for el in train_class])
     diff = count_train[1] - count_train[0]
     if diff == 0:  # No balancing needed

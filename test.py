@@ -7,7 +7,12 @@ from data import get_data_generator
 from losses import get_auxiliary_loss_model_criterion
 from train import train
 
+# data parameters
+DATA_SIZE = 1000
+# Train parameters
 EPOCHS_TRAIN = 30
+ACCURACY_THRESHOLD = 0.85
+NETWORK_VER = 5
 # Parameters obtained by grid search
 LEARNING_RATE = 0.01
 REGULARIZATION_TERM = 0.01
@@ -19,8 +24,7 @@ OUTPUT_DIGIT_CHANNELS = 10  # Each represents probability of corresponding digit
 
 def main():
     # Generate data
-    N = 1000
-    generate_data = get_data_generator(N=N, mode=None)  # Not applying over or under sampling technique
+    generate_data = get_data_generator(N=DATA_SIZE, mode=None)  # Not applying over or under sampling technique
     train_loader, test_loader = generate_data()
 
     # Choose device to use
@@ -28,10 +32,9 @@ def main():
     print(f"Using {device} for training and testing")
 
     # Define parameters fro training
-    ver = 5
-    print(f"Training Siamese model version {ver}")
+    print(f"Training Siamese model version {NETWORK_VER}")
     net_auxiliary_loss = NetSiamese(INPUT_CHANNELS, OUTPUT_CLASS_CHANNELS, OUTPUT_DIGIT_CHANNELS,
-                                    activation="leakyrelu", auxiliary_loss=True, version=ver)
+                                    activation="leakyrelu", auxiliary_loss=True, version=NETWORK_VER)
     optimizer = optim.Adam(net_auxiliary_loss.parameters(), lr=LEARNING_RATE, weight_decay=REGULARIZATION_TERM)
     criterion = get_auxiliary_loss_model_criterion()
 
@@ -47,12 +50,12 @@ def main():
 
         accuracy_train_class, accuracy_test_class, accuracy_train_digit, accuracy_test_digit = accuracies
 
-        if max(accuracy_test_class) > 0.8:
+        if max(accuracy_test_class) > ACCURACY_THRESHOLD:
             break
 
     # Plot results
     plot_accuracy_and_loss(accuracy_train_class, accuracy_test_class, losses,
-                           title="NetDigitPrediction Class Prediction")
+                           title="Class Prediction accuracy")
 
 
 if __name__ == '__main__':
