@@ -10,9 +10,8 @@ from train import train
 # data parameters
 DATA_SIZE = 1000
 # Train parameters
-EPOCHS_TRAIN = 30
-ACCURACY_THRESHOLD = 0.85
-NETWORK_VER = 5
+EPOCHS_TRAIN = 25
+NETWORK_VERSION = 5
 # Parameters obtained by grid search
 LEARNING_RATE = 0.01
 REGULARIZATION_TERM = 0.01
@@ -32,26 +31,21 @@ def main():
     print(f"Using {device} for training and testing")
 
     # Define parameters fro training
-    print(f"Training Siamese model version {NETWORK_VER}")
+    print(f"Training Siamese model version {NETWORK_VERSION}")
     net_auxiliary_loss = NetSiamese(INPUT_CHANNELS, OUTPUT_CLASS_CHANNELS, OUTPUT_DIGIT_CHANNELS,
-                                    activation="leakyrelu", auxiliary_loss=True, version=NETWORK_VER)
+                                    activation="leakyrelu", auxiliary_loss=True, version=NETWORK_VERSION)
     optimizer = optim.Adam(net_auxiliary_loss.parameters(), lr=LEARNING_RATE, weight_decay=REGULARIZATION_TERM)
     criterion = get_auxiliary_loss_model_criterion()
 
-    # Loop is needed for the case when due to unseen circumstances model will not train appropriately at first time
-    while True:
-        # Train model
-        _, accuracies, losses = train(train_loader, test_loader,
-                                      net_auxiliary_loss,
-                                      optimizer,
-                                      criterion,
-                                      device=device,
-                                      epochs=EPOCHS_TRAIN, print_info=True)
+    # Train model
+    _, accuracies, losses = train(train_loader, test_loader,
+                                  net_auxiliary_loss,
+                                  optimizer,
+                                  criterion,
+                                  device=device,
+                                  epochs=EPOCHS_TRAIN, print_info=True)
 
-        accuracy_train_class, accuracy_test_class, accuracy_train_digit, accuracy_test_digit = accuracies
-
-        if max(accuracy_test_class) > ACCURACY_THRESHOLD:
-            break
+    accuracy_train_class, accuracy_test_class, accuracy_train_digit, accuracy_test_digit = accuracies
 
     # Plot results
     plot_accuracy_and_loss(accuracy_train_class, accuracy_test_class, losses,

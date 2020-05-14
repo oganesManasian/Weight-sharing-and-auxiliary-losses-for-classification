@@ -127,17 +127,22 @@ def plot_accuracy_and_loss(accuracy_train, accuracy_test, losses, title, save=Fa
     """
     fig, ax1 = plt.subplots()
 
+    # Plot accuracies
     color_tr = 'tab:green'
     color_val = 'tab:blue'
-    ax1.set_xlabel("Step (x100)")
-    ax1.set_ylabel("Accuracy (train - green, validation - blue)")
+    ticks = [i for i in range(1, len(accuracy_train)) if i % 5 == 0]
+    ax1.set_xticks(ticks=ticks)
+    ax1.set_xticklabels(labels=ticks)
+    ax1.set_xlabel("Epoch")
+    ax1.set_ylabel("Accuracy (train - green, test - blue)")
+    ax1.set_ylim(0.7, 1)
     ax1.plot(range(len(accuracy_train)), accuracy_train, color=color_tr)
     ax1.plot(range(len(accuracy_test)), accuracy_test, color=color_val)
     ax1.tick_params(axis='y')
 
-    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
-
+    # Plot loss
     color_loss = 'tab:red'
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
     ax2.set_ylabel("Loss", color=color_loss)  # we already handled the x-label with ax1
     ax2.plot(range(len(losses)), losses, color=color_loss)
     ax2.tick_params(axis='y', labelcolor=color_loss)

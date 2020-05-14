@@ -3,9 +3,9 @@ from torch import nn
 import torch.nn.functional as F
 
 
-class NetSimple(nn.Module):
+class NetBase(nn.Module):
     """
-    CNN network
+    CNN network based on LeNet5
     Predicts image class
     """
 
@@ -100,8 +100,8 @@ class NetSiamese(nn.Module):
         elif self.version == 4:
             pass  # We don't have additional layers for this version
         elif self.version == 5:
-            self.fc3 = nn.Linear(2 * output_digit_channels, output_class_channels)
             self.softmax = torch.nn.Softmax(dim=1)
+            self.fc3 = nn.Linear(2 * output_digit_channels, output_class_channels)
         elif self.version == 6:
             self.fc3 = nn.Linear(2 * output_digit_channels, 25)
             self.fc4 = nn.Linear(25, output_class_channels)

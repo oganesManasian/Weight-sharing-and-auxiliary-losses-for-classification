@@ -3,9 +3,9 @@ from torch import nn
 CROSS_ENTROPY = nn.CrossEntropyLoss()
 
 
-def simple_model_criterion(output, target):
+def base_model_criterion(output, target):
     """
-    Loss criterion for simple model: cross entropy for class predictons
+    Loss criterion for base model: cross entropy for class predictions
     :param output: output of model
     :param target: target value
     :return: loss value
@@ -15,7 +15,7 @@ def simple_model_criterion(output, target):
 
 def siamese_model_criterion(output, target):
     """
-    Loss criterion for siamese model: cross entropy for class predictons
+    Loss criterion for siamese model: cross entropy for class predictions
     :param output: output of model
     :param target: target value
     :return: loss value
