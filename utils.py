@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch import optim
 import numpy as np
-from tqdm import tqdm_notebook as tqdm
+from tqdm import tqdm
 
 
 def get_accuracy(model, data_loader, device, calculate_accuracy_digit=False):
