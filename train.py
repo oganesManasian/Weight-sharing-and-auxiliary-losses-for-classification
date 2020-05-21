@@ -80,12 +80,12 @@ def train(train_data_loader, test_data_loader, model, optimizer, criterion, devi
 
         if print_info and (epoch + 1) % print_every == 0:
             print(f"Epoch {epoch + 1}/{epochs}, loss {losses[-1]:0.4f},",
-                  f"class train/test accuracy: {accuracy_train_class[-1]}/{accuracy_test_class[-1]}",
-                  f", digit train/test accuracy: {accuracy_train_digit[-1]}/{accuracy_test_digit[-1]}"
+                  f"class train/test accuracy: {accuracy_train_class[-1]}/{accuracy_test_class[-1]},",
+                  f"digit train/test accuracy: {accuracy_train_digit[-1]}/{accuracy_test_digit[-1]}"
                   if accuracy_train_digit else "")
 
     if print_info:
-        print(f"Achieved accuracy: {best_accuracy}")
+        print(f"Best achieved test accuracy: {best_accuracy}")
 
     if early_stopping:
         return best_model, [accuracy_train_class, accuracy_test_class, accuracy_train_digit,

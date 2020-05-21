@@ -2,7 +2,7 @@
 The objective of this project is to test different architectures to compare two digits visible in a two-channel image. It aims at showing in particular the impact of weight sharing, and of the use of an auxiliary loss to help the training of the main objective.
 
 ## Models description
-Models' description and comparison is available in the [report](CLASSIFICATION__WEIGHT_SHARING__AUXILIARY_LOSSES.pdf).
+Models' description and comparison is available in the [report](report.pdf).
 
 ## Requirements:
 * Torch
@@ -10,7 +10,7 @@ Models' description and comparison is available in the [report](CLASSIFICATION__
 ## Run
 To train Siamese model with auxiliary loss version 5 and test accuracy for class and digit prediction use command:
 ```bash
-python main.py
+python test.py
 ```
 Use argument
 ```
